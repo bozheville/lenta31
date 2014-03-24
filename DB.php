@@ -17,8 +17,11 @@ class DB {
         $this->db = $this->client->selectDB($name);
     }
 
-    public function find($collection, $condition = array(), $limit = 0, $skip = 0, $sort = array(), $use_keys = true) {
+    public function find($collection, $condition = array(), $limit = 0, $skip = 0, $sort = array(), $use_keys = true, $select_keys = array()) {
         $cursor = $this->db->$collection->find($condition);
+        if(count($select_keys) > 0){
+            $cursor = $cursor->fields($select_keys);
+        }
         if ((boolean) $sort) $cursor = $cursor->sort($sort);
         if ((int) $skip > 0) $cursor = $cursor->skip((int) $skip);
         if ((int) $limit > 0) $cursor = $cursor->limit((int) $limit);

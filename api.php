@@ -28,25 +28,55 @@ class Api
             $imglnk = $imglnk['url'];
         } else{
             $data['description'] = $page->find('h2.b-topic__rightcol', 0)->innertext;
+            $data['announce'] = $page->find('p.b-topic__announce', 0)->innertext;
+            $data['author'] = $page->find('p.b-topic__content__author', 0)->innertext;
+            $body = array();
+            //
+            foreach($page->find('div[itemprop=articleBody]',0)->find('p') as $p){
+                if ($p->hasAttribute('class') && (strstr($p->getAttribute('class'), 'b-topic__announce') || strstr($p->getAttribute('class'), 'b-topic__content__author'))){
+
+                } else{
+                    $class = '';
+                    if($p->hasAttribute('class')){
+                        $class=$p->class;
+                    }
+                    $body[] = '<p'.($class?' class="'.$class.'"':'').'>'.$p->innertext.'</p>';
+                }
+
+            }
+            $data['body'] = implode('', $body);
             $imglnk = $page->find('img.g-picture', 0)->src;
         }
         $data['date'] = $page->find('.g-date', 0)->innertext;
-
         if(!is_dir('img')){
             mkdir('img');
         }
         $extension = preg_replace('#^.+(\.[^\.]+)$#', '$1', $imglnk);
         $imgname = 'img/' . $data['_id'] . $extension;
-        file_put_contents($imgname, file_get_contents($imglnk));
-        $data['img'] = 'http://lenta31.grybov.com/' . $imgname;
+        $data['img_src'] = 'http://lenta31.grybov.com/' . $imgname;
+        $data['img_data'] = base64_encode(file_get_contents($imglnk));
         $data['ts'] = time();
-        $this->db->insert('articles', $data);
-        echo json_encode($data);
+        $this->db->insert('full_articles', $data);
+        echo json_encode(array('status' => 'added'));
     }
 
-    public function getAll()
-    {
-        echo json_encode($this->db->find('articles', array(), 0, 0, array('_id' => -1), false));
+    public function getAll() {
+        $fields = array('_id' => true, 'img_src' => true, 'title' => true, 'description' => true, 'date' => true);
+        echo json_encode($this->db->find('full_articles', array(), 0, 0, array('_id' => -1), false, $fields));
+    }
+
+    public function getArticle($id) {
+        $article = $this->db->findOne('full_articles', array('_id' => (int) $id));
+        if($article){
+            echo json_encode($article);
+        }
+    }
+
+    public function reparse(){
+        $articles = $this->db->find('articles');
+        foreach($articles as $k => $article){
+            $this->add($article['link'], $k);
+        }
     }
 }
 
@@ -56,4 +86,8 @@ if ($_GET['add']) {
     $Api->add($_GET['add'], $_GET['num']);
 } elseif($_GET['get'] == 'all'){
     $Api->getAll();
+} elseif($_GET['get'] > 0){
+    $Api->getArticle(get('get'));
+} elseif(isset($_GET['reparse'])){
+    $Api->reparse();
 }

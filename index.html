@@ -6,11 +6,32 @@
     <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/skeleton/1.2/layout.css"/>
     <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/skeleton/1.2/skeleton.min.css"/>
     <style>
-        .article{min-height: 350px;}
+        .article{min-height: 350px; cursor: pointer;}
         .article img{width: 100%;}
         .article h5{min-height: 50px;}
         .article.viewed{opacity: 0.5;}
         .article.viewed:hover{opacity: 1;}
+        .article_popup{
+            position: absolute;
+            top: 5%;
+            width: 960px;
+            background-color: #fff;
+            left: 50%;
+            margin-left: -480px;
+            margin-bottom: 5%;
+            box-shadow: -webkit-box-shadow: 0 0 10px 0 #404040;
+            box-shadow: 0 0 10px 0 #404040;
+        }
+        .article_popup img{display: block;margin: 0 auto;}
+        .article_popup h3, .article_popup h5{text-align: center;}
+        .article_popup .closebutton{float: right;padding: 10px;cursor: pointer;}
+        .article_popup .closebutton:after{content: 'Закрыть [X]';}
+        .article_popup .article-body{padding: 20px 15px 30px;}
+        .article_popup .source{padding: 5px 15px 0;}
+        .article_popup .author{float: right;font-style: italic;}
+        .article_popup .announce{font-style: italic;}
+        .article_popup b{font-weight: bold;}
+        .article_popup p.question{font-weight: bold;font-style: italic;}
     </style>
 </head>
 <body ng-controller="App">
@@ -42,12 +63,30 @@
             пока что официального сборника нет.
         </p>
     </div>
-    <a class="four columns article" ng-repeat="article in links" ng-class="{viewed: viewedArticles[article._id]}" href="{{article.link}}" ng-click="setViewed(article._id);">
+    <span class="four columns article" ng-repeat="article in links" ng-class="{viewed: viewedArticles[article._id]}" ng-click="viewArticle(article._id);">
         <h5>#{{article._id}} {{article.title}}</h5>
         <small>{{article.date}}</small>
-        <img ng-src="{{article.img}}"/><br/>
+        <img ng-src="{{article.img_src}}"/><br/>
         <em>{{article.description}}</em><br/>
-    </a>
+    </span>
+</div>
+<div class="article_popup" ng-show="show_article">
+    <div class="sixteen columns closebutton" ng-click="closePopup()"></div>
+    <div class="sixteen columns">
+        <h3>{{current_article.title}}</h3>
+    </div>
+    <div class="sixteen columns">
+        <img ng-src="{{current_article.img_src}}"/>
+    </div>
+    <div class="sixteen columns">
+        <h5><em>{{current_article.description}}</em></h5>
+    </div>
+    <div class="sixteen columns source">
+        Источник: <a href="{{current_article.link}}"><em>{{current_article.link}}</em></a>
+    </div>
+    <div class="sixteen columns article-body announce" ng-bind-html="current_article.announce | to_trusted"></div>
+    <div class="sixteen columns article-body" ng-bind-html="current_article.body | to_trusted"></div>
+    <div class="sixteen columns article-body author" ng-bind-html="current_article.author | to_trusted"></div>
 </div>
 <script src="//code.angularjs.org/1.2.9/angular.min.js" type="text/javascript"></script>
 <script src="//code.angularjs.org/1.2.9/angular-cookies.min.js" type="text/javascript"></script>
